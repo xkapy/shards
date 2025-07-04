@@ -214,16 +214,31 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ onSubmit }) => {
 
   // Auto-submit when form data changes (but only if we have a valid shard)
   useEffect(() => {
+    const isValidShardName = async (shardName: string): Promise<boolean> => {
+      if (!shardName || shardName.trim() === "") return false;
+      
+      try {
+        const dataService = DataService.getInstance();
+        const nameToKeyMap = await dataService.getShardNameToKeyMap();
+        return !!nameToKeyMap[shardName.toLowerCase()];
+      } catch {
+        return false;
+      }
+    };
+
     if (selectedShard && selectedShard.trim() !== "" && formData.shard && formData.shard.trim() !== "") {
-      const timeoutId = setTimeout(() => {
-        // Get current form values and transform them
-        const currentValues = formData;
-        const transformedData = {
-          ...currentValues,
-          frogPet: !currentValues.frogPet, // Invert because checkbox is "No Frog Pet"
-        };
-        onSubmit(transformedData);
-      }, 500); // Small delay to avoid too many submissions
+      const timeoutId = setTimeout(async () => {
+        // Only trigger calculation if the shard name is valid and complete
+        const isValid = await isValidShardName(formData.shard);
+        if (isValid) {
+          const currentValues = formData;
+          const transformedData = {
+            ...currentValues,
+            frogPet: !currentValues.frogPet, // Invert because checkbox is "No Frog Pet"
+          };
+          onSubmit(transformedData);
+        }
+      }, 1000); // Increased delay to give more time for typing
 
       return () => clearTimeout(timeoutId);
     }

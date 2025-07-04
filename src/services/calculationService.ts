@@ -13,10 +13,7 @@ export class CalculationService {
 
   async parseData(params: CalculationParams): Promise<Data> {
     try {
-      const [fusionResponse, ratesResponse] = await Promise.all([
-        fetch(`${import.meta.env.BASE_URL}fusion-data.json`),
-        fetch(`${import.meta.env.BASE_URL}rates.json`)
-      ]);
+      const [fusionResponse, ratesResponse] = await Promise.all([fetch(`${import.meta.env.BASE_URL}fusion-data.json`), fetch(`${import.meta.env.BASE_URL}rates.json`)]);
 
       const fusionJson = await fusionResponse.json();
       const defaultRates = await ratesResponse.json();
@@ -228,8 +225,17 @@ export class CalculationService {
     const data = await this.parseData(params);
 
     if (!data.shards[targetShard]) {
-      console.warn(`Calculation skipped: Shard "${targetShard}" not found in the data.`);
-      throw new Error(`Shard ${targetShard} not found in the data.`);
+      // Return empty result instead of throwing to prevent console noise
+      return {
+        timePerShard: 0,
+        totalTime: 0,
+        totalShardsProduced: 0,
+        craftsNeeded: 0,
+        totalQuantities: new Map<string, number>(),
+        totalFusions: 0,
+        craftTime: 0,
+        tree: { shard: targetShard, method: "direct", quantity: 0, inputs: [] },
+      };
     }
 
     const { minCosts, choices } = this.computeMinCosts(data);
