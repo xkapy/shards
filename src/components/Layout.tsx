@@ -22,7 +22,7 @@ export const Layout: React.FC = () => {
 
         <footer className="relative z-10 text-center py-6 text-slate-400 text-sm">
           <div className="w-full px-4 lg:px-6 xl:px-8">
-            <p>Made by Campion</p>
+            <p>Made by Campion and xKapy</p>
             <p className="mt-1">Thanks to HsFearless, MaxLunar and WhatYouThing for the data</p>
           </div>
         </footer>
