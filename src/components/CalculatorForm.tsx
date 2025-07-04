@@ -214,7 +214,7 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ onSubmit }) => {
 
   // Auto-submit when form data changes (but only if we have a valid shard)
   useEffect(() => {
-    if (selectedShard && selectedShard.trim() !== "") {
+    if (selectedShard && selectedShard.trim() !== "" && formData.shard && formData.shard.trim() !== "") {
       const timeoutId = setTimeout(() => {
         // Get current form values and transform them
         const currentValues = formData;

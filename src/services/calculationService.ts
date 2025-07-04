@@ -228,6 +228,7 @@ export class CalculationService {
     const data = await this.parseData(params);
 
     if (!data.shards[targetShard]) {
+      console.warn(`Calculation skipped: Shard "${targetShard}" not found in the data.`);
       throw new Error(`Shard ${targetShard} not found in the data.`);
     }
 

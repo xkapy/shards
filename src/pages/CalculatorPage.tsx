@@ -18,6 +18,12 @@ export const CalculatorPage: React.FC = () => {
 
   const handleCalculate = async (formData: CalculationFormData) => {
     try {
+      // Validate that we have a valid shard name before proceeding
+      if (!formData.shard || formData.shard.trim() === "") {
+        console.warn("Calculation skipped: No shard selected");
+        return;
+      }
+
       // Hide sidebar on mobile after submission
       setSidebarOpen(false);
 
@@ -27,7 +33,8 @@ export const CalculatorPage: React.FC = () => {
       const shardKey = nameToKeyMap[formData.shard.toLowerCase()];
 
       if (!shardKey) {
-        throw new Error("Shard not found");
+        console.warn(`Calculation skipped: Shard "${formData.shard}" not found in data`);
+        return;
       }
 
       setTargetShardName(formData.shard);
@@ -59,7 +66,10 @@ export const CalculatorPage: React.FC = () => {
       const data = await service.parseData(params);
       setCalculationData(data);
     } catch (err) {
-      console.error("Calculation failed:", err);
+      // Only log significant errors, not validation failures
+      if (err instanceof Error && !err.message.includes("not found")) {
+        console.error("Calculation failed:", err);
+      }
     }
   };
 
