@@ -13,7 +13,10 @@ export class CalculationService {
 
   async parseData(params: CalculationParams): Promise<Data> {
     try {
-      const [fusionResponse, ratesResponse] = await Promise.all([fetch("/fusion-data.json"), fetch("/rates.json")]);
+      const [fusionResponse, ratesResponse] = await Promise.all([
+        fetch(`${import.meta.env.BASE_URL}fusion-data.json`),
+        fetch(`${import.meta.env.BASE_URL}rates.json`)
+      ]);
 
       const fusionJson = await fusionResponse.json();
       const defaultRates = await ratesResponse.json();

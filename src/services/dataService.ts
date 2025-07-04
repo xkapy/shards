@@ -20,7 +20,7 @@ export class DataService {
     }
 
     try {
-      const response = await fetch("/fusion-data.json");
+      const response = await fetch(`${import.meta.env.BASE_URL}fusion-data.json`);
       const data = await response.json();
 
       this.shardsCache = Object.entries(data.shards).map(([key, shard]: [string, any]) => ({
@@ -55,7 +55,7 @@ export class DataService {
     }
 
     try {
-      const response = await fetch("/rates.json");
+      const response = await fetch(`${import.meta.env.BASE_URL}rates.json`);
       this.defaultRatesCache = await response.json();
       return this.defaultRatesCache!;
     } catch (error) {
@@ -69,7 +69,7 @@ export class DataService {
     }
 
     try {
-      const response = await fetch("/fusion-data.json");
+      const response = await fetch(`${import.meta.env.BASE_URL}fusion-data.json`);
       const data = await response.json();
 
       const recipes: Recipes = {};
