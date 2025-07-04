@@ -15,15 +15,14 @@ interface RecipeTreeNodeProps {
   data: Data;
   isTopLevel?: boolean;
   totalShardsProduced?: number;
-  forceExpanded?: boolean;
+  nodeId: string;
+  expandedStates: Map<string, boolean>;
+  onToggle: (nodeId: string) => void;
 }
 
-const RecipeTreeNode: React.FC<RecipeTreeNodeProps> = ({ tree, data, isTopLevel = false, totalShardsProduced = tree.quantity, forceExpanded }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+const RecipeTreeNode: React.FC<RecipeTreeNodeProps> = ({ tree, data, isTopLevel = false, totalShardsProduced = tree.quantity, nodeId, expandedStates, onToggle }) => {
   const shard = data.shards[tree.shard];
-
-  // Use forceExpanded if provided, otherwise use local state
-  const effectiveExpanded = forceExpanded !== undefined ? forceExpanded : isExpanded;
+  const isExpanded = expandedStates.get(nodeId) ?? true;
 
   if (tree.method === "direct") {
     return (
@@ -56,10 +55,10 @@ const RecipeTreeNode: React.FC<RecipeTreeNodeProps> = ({ tree, data, isTopLevel 
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
-      <button onClick={() => setIsExpanded(!isExpanded)} className="w-full p-4 text-left hover:bg-white/5 transition-colors duration-200">
+      <button onClick={() => onToggle(nodeId)} className="w-full p-4 text-left hover:bg-white/5 transition-colors duration-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            {effectiveExpanded ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+            {isExpanded ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
             <div className="text-white">
               <span className="font-semibold">{displayQuantity}x </span>
               <span className={`font-medium cursor-help ${getRarityColor(shard.rarity)}`} title={getShardDetails(shard, false)}>
@@ -84,7 +83,7 @@ const RecipeTreeNode: React.FC<RecipeTreeNodeProps> = ({ tree, data, isTopLevel 
       </button>
 
       <AnimatePresence>
-        {effectiveExpanded && (
+        {isExpanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
@@ -92,8 +91,8 @@ const RecipeTreeNode: React.FC<RecipeTreeNodeProps> = ({ tree, data, isTopLevel 
             transition={{ duration: 0.3 }}
             className="border-t border-white/10 p-4 space-y-3"
           >
-            <RecipeTreeNode tree={input1} data={data} forceExpanded={forceExpanded} />
-            <RecipeTreeNode tree={input2} data={data} forceExpanded={forceExpanded} />
+            <RecipeTreeNode tree={input1} data={data} nodeId={`${nodeId}-0`} expandedStates={expandedStates} onToggle={onToggle} />
+            <RecipeTreeNode tree={input2} data={data} nodeId={`${nodeId}-1`} expandedStates={expandedStates} onToggle={onToggle} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -102,14 +101,54 @@ const RecipeTreeNode: React.FC<RecipeTreeNodeProps> = ({ tree, data, isTopLevel 
 };
 
 export const CalculationResults: React.FC<CalculationResultsProps> = ({ result, data, targetShardName }) => {
-  const [forceExpandState, setForceExpandState] = useState<boolean | undefined>(undefined);
+  const [expandedStates, setExpandedStates] = useState<Map<string, boolean>>(new Map());
+  const [lastTreeHash, setLastTreeHash] = useState<string>("");
+
+  // Initialize expanded states for all nodes (default to true)
+  const initializeExpandedStates = (tree: RecipeTree, nodeId: string = "root"): Map<string, boolean> => {
+    const states = new Map<string, boolean>();
+
+    const traverse = (node: RecipeTree, id: string) => {
+      if (node.method === "recipe" && node.inputs) {
+        states.set(id, true); // Default to expanded
+        node.inputs.forEach((input, index) => {
+          traverse(input, `${id}-${index}`);
+        });
+      }
+    };
+
+    traverse(tree, nodeId);
+    return states;
+  };
+
+  // Initialize states when result changes
+  React.useEffect(() => {
+    if (result.tree) {
+      const treeHash = JSON.stringify(result.tree);
+      if (treeHash !== lastTreeHash) {
+        const initialStates = initializeExpandedStates(result.tree);
+        setExpandedStates(initialStates);
+        setLastTreeHash(treeHash);
+      }
+    }
+  }, [result.tree, lastTreeHash]);
 
   const handleToggleAll = () => {
-    if (forceExpandState === true) {
-      setForceExpandState(false);
-    } else {
-      setForceExpandState(true);
+    const newStates = new Map(expandedStates);
+    const allExpanded = Array.from(newStates.values()).every((expanded) => expanded);
+
+    // Toggle all states
+    for (const key of newStates.keys()) {
+      newStates.set(key, !allExpanded);
     }
+
+    setExpandedStates(newStates);
+  };
+
+  const handleNodeToggle = (nodeId: string) => {
+    const newStates = new Map(expandedStates);
+    newStates.set(nodeId, !newStates.get(nodeId));
+    setExpandedStates(newStates);
   };
 
   return (
@@ -211,11 +250,11 @@ export const CalculationResults: React.FC<CalculationResultsProps> = ({ result, 
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-white">Fusion Tree</h3>
           <button onClick={handleToggleAll} className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors duration-200">
-            {forceExpandState === false ? "Expand All" : "Collapse All"}
+            {Array.from(expandedStates.values()).every((expanded) => expanded) ? "Collapse All" : "Expand All"}
           </button>
         </div>
 
-        <RecipeTreeNode tree={result.tree} data={data} isTopLevel={true} totalShardsProduced={result.totalShardsProduced} forceExpanded={forceExpandState} />
+        <RecipeTreeNode tree={result.tree} data={data} isTopLevel={true} totalShardsProduced={result.totalShardsProduced} nodeId="root" expandedStates={expandedStates} onToggle={handleNodeToggle} />
       </motion.div>
     </motion.div>
   );
