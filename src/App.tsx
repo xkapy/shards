@@ -5,7 +5,7 @@ import { SettingsPage } from "./pages/SettingsPage";
 
 const App = () => {
   return (
-    <Router>
+    <Router basename="/shards">
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<CalculatorPage />} />
