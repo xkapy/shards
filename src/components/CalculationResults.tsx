@@ -15,11 +15,15 @@ interface RecipeTreeNodeProps {
   data: Data;
   isTopLevel?: boolean;
   totalShardsProduced?: number;
+  forceExpanded?: boolean;
 }
 
-const RecipeTreeNode: React.FC<RecipeTreeNodeProps> = ({ tree, data, isTopLevel = false, totalShardsProduced = tree.quantity }) => {
+const RecipeTreeNode: React.FC<RecipeTreeNodeProps> = ({ tree, data, isTopLevel = false, totalShardsProduced = tree.quantity, forceExpanded }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const shard = data.shards[tree.shard];
+
+  // Use forceExpanded if provided, otherwise use local state
+  const effectiveExpanded = forceExpanded !== undefined ? forceExpanded : isExpanded;
 
   if (tree.method === "direct") {
     return (
@@ -27,10 +31,10 @@ const RecipeTreeNode: React.FC<RecipeTreeNodeProps> = ({ tree, data, isTopLevel 
         <div className="flex items-center space-x-3">
           <div className="w-2 h-2 bg-green-400 rounded-full" />
           <div className="flex items-center space-x-3">
+            <span className="text-slate-400">{tree.quantity}x</span>
             <span className={`font-medium cursor-help ${getRarityColor(shard.rarity)}`} title={getShardDetails(shard, true)}>
               {shard.name}
             </span>
-            <span className="text-slate-400">{tree.quantity}</span>
             <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-full border border-green-500/30">direct</span>
           </div>
         </div>
@@ -55,7 +59,7 @@ const RecipeTreeNode: React.FC<RecipeTreeNodeProps> = ({ tree, data, isTopLevel 
       <button onClick={() => setIsExpanded(!isExpanded)} className="w-full p-4 text-left hover:bg-white/5 transition-colors duration-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            {isExpanded ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+            {effectiveExpanded ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
             <div className="text-white">
               <span className="font-semibold">{displayQuantity}x </span>
               <span className={`font-medium cursor-help ${getRarityColor(shard.rarity)}`} title={getShardDetails(shard, false)}>
@@ -80,7 +84,7 @@ const RecipeTreeNode: React.FC<RecipeTreeNodeProps> = ({ tree, data, isTopLevel 
       </button>
 
       <AnimatePresence>
-        {isExpanded && (
+        {effectiveExpanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
@@ -88,8 +92,8 @@ const RecipeTreeNode: React.FC<RecipeTreeNodeProps> = ({ tree, data, isTopLevel 
             transition={{ duration: 0.3 }}
             className="border-t border-white/10 p-4 space-y-3"
           >
-            <RecipeTreeNode tree={input1} data={data} />
-            <RecipeTreeNode tree={input2} data={data} />
+            <RecipeTreeNode tree={input1} data={data} forceExpanded={forceExpanded} />
+            <RecipeTreeNode tree={input2} data={data} forceExpanded={forceExpanded} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -98,11 +102,14 @@ const RecipeTreeNode: React.FC<RecipeTreeNodeProps> = ({ tree, data, isTopLevel 
 };
 
 export const CalculationResults: React.FC<CalculationResultsProps> = ({ result, data, targetShardName }) => {
-  const [expandAll, setExpandAll] = useState(true);
+  const [forceExpandState, setForceExpandState] = useState<boolean | undefined>(undefined);
 
   const handleToggleAll = () => {
-    setExpandAll(!expandAll);
-    // This would need to be implemented to control all tree nodes
+    if (forceExpandState === true) {
+      setForceExpandState(false);
+    } else {
+      setForceExpandState(true);
+    }
   };
 
   return (
@@ -204,11 +211,11 @@ export const CalculationResults: React.FC<CalculationResultsProps> = ({ result, 
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-white">Fusion Tree</h3>
           <button onClick={handleToggleAll} className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors duration-200">
-            {expandAll ? "Collapse All" : "Expand All"}
+            {forceExpandState === false ? "Expand All" : "Collapse All"}
           </button>
         </div>
 
-        <RecipeTreeNode tree={result.tree} data={data} isTopLevel={true} totalShardsProduced={result.totalShardsProduced} />
+        <RecipeTreeNode tree={result.tree} data={data} isTopLevel={true} totalShardsProduced={result.totalShardsProduced} forceExpanded={forceExpandState} />
       </motion.div>
     </motion.div>
   );

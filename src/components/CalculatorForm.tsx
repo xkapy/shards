@@ -216,7 +216,7 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ onSubmit }) => {
   useEffect(() => {
     const isValidShardName = async (shardName: string): Promise<boolean> => {
       if (!shardName || shardName.trim() === "") return false;
-      
+
       try {
         const dataService = DataService.getInstance();
         const nameToKeyMap = await dataService.getShardNameToKeyMap();
@@ -432,7 +432,7 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ onSubmit }) => {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center space-x-2 p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200">
+              <div className="flex gap-2 items-center space-x-2 p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200">
                 <input
                   id="excludeChameleon"
                   type="checkbox"
@@ -449,7 +449,7 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ onSubmit }) => {
                 </label>
               </div>
 
-              <div className="flex items-center space-x-2 p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200">
+              <div className="flex gap-2 items-center space-x-2 p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200">
                 <input
                   id="excludeWoodenBait"
                   type="checkbox"
@@ -466,7 +466,7 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ onSubmit }) => {
                 </label>
               </div>
 
-              <div className="flex items-center space-x-2 p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200">
+              <div className="flex gap-2 items-center space-x-2 p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200">
                 <input
                   id="frogPet"
                   type="checkbox"
