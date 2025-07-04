@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://xkapy.github.io/fusing-calculator/",
+  "homepage": "https://xkapy.github.io/shards/",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
